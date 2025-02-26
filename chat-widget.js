@@ -2,15 +2,15 @@
 (function() {
     // Create and inject styles
     const styles = `
-        .n8n-chat-widget {
-            --chat--color-primary: var(--n8n-chat-primary-color, #854fff);
-            --chat--color-secondary: var(--n8n-chat-secondary-color, #6b3fd4);
-            --chat--color-background: var(--n8n-chat-background-color, #ffffff);
-            --chat--color-font: var(--n8n-chat-font-color, #333333);
+        .pulsifyai-chat-widget {
+            --chat--color-primary: var(--pulsifyai-chat-primary-color, #854fff);
+            --chat--color-secondary: var(--pulsifyai-chat-secondary-color, #6b3fd4);
+            --chat--color-background: var(--pulsifyai-chat-background-color, #ffffff);
+            --chat--color-font: var(--pulsifyai-chat-font-color, #333333);
             font-family: 'Geist Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
         }
 
-        .n8n-chat-widget .chat-container {
+        .pulsifyai-chat-widget .chat-container {
             position: fixed;
             bottom: 20px;
             right: 20px;
@@ -26,17 +26,17 @@
             font-family: inherit;
         }
 
-        .n8n-chat-widget .chat-container.position-left {
+        .pulsifyai-chat-widget .chat-container.position-left {
             right: auto;
             left: 20px;
         }
 
-        .n8n-chat-widget .chat-container.open {
+        .pulsifyai-chat-widget .chat-container.open {
             display: flex;
             flex-direction: column;
         }
 
-        .n8n-chat-widget .brand-header {
+        .pulsifyai-chat-widget .brand-header {
             padding: 16px;
             display: flex;
             align-items: center;
@@ -45,7 +45,7 @@
             position: relative;
         }
 
-        .n8n-chat-widget .close-button {
+        .pulsifyai-chat-widget .close-button {
             position: absolute;
             right: 16px;
             top: 50%;
@@ -63,22 +63,22 @@
             opacity: 0.6;
         }
 
-        .n8n-chat-widget .close-button:hover {
+        .pulsifyai-chat-widget .close-button:hover {
             opacity: 1;
         }
 
-        .n8n-chat-widget .brand-header img {
+        .pulsifyai-chat-widget .brand-header img {
             width: 32px;
             height: 32px;
         }
 
-        .n8n-chat-widget .brand-header span {
+        .pulsifyai-chat-widget .brand-header span {
             font-size: 18px;
             font-weight: 500;
             color: var(--chat--color-font);
         }
 
-        .n8n-chat-widget .new-conversation {
+        .pulsifyai-chat-widget .new-conversation {
             position: absolute;
             top: 50%;
             left: 50%;
@@ -89,7 +89,7 @@
             max-width: 300px;
         }
 
-        .n8n-chat-widget .welcome-text {
+        .pulsifyai-chat-widget .welcome-text {
             font-size: 24px;
             font-weight: 600;
             color: var(--chat--color-font);
@@ -97,7 +97,7 @@
             line-height: 1.3;
         }
 
-        .n8n-chat-widget .new-chat-btn {
+        .pulsifyai-chat-widget .new-chat-btn {
             display: flex;
             align-items: center;
             justify-content: center;
@@ -116,33 +116,33 @@
             margin-bottom: 12px;
         }
 
-        .n8n-chat-widget .new-chat-btn:hover {
+        .pulsifyai-chat-widget .new-chat-btn:hover {
             transform: scale(1.02);
         }
 
-        .n8n-chat-widget .message-icon {
+        .pulsifyai-chat-widget .message-icon {
             width: 20px;
             height: 20px;
         }
 
-        .n8n-chat-widget .response-text {
+        .pulsifyai-chat-widget .response-text {
             font-size: 14px;
             color: var(--chat--color-font);
             opacity: 0.7;
             margin: 0;
         }
 
-        .n8n-chat-widget .chat-interface {
+        .pulsifyai-chat-widget .chat-interface {
             display: none;
             flex-direction: column;
             height: 100%;
         }
 
-        .n8n-chat-widget .chat-interface.active {
+        .pulsifyai-chat-widget .chat-interface.active {
             display: flex;
         }
 
-        .n8n-chat-widget .chat-messages {
+        .pulsifyai-chat-widget .chat-messages {
             flex: 1;
             overflow-y: auto;
             padding: 20px;
@@ -151,7 +151,7 @@
             flex-direction: column;
         }
 
-        .n8n-chat-widget .chat-message {
+        .pulsifyai-chat-widget .chat-message {
             padding: 12px 16px;
             margin: 8px 0;
             border-radius: 12px;
@@ -161,7 +161,7 @@
             line-height: 1.5;
         }
 
-        .n8n-chat-widget .chat-message.user {
+        .pulsifyai-chat-widget .chat-message.user {
             background: linear-gradient(135deg, var(--chat--color-primary) 0%, var(--chat--color-secondary) 100%);
             color: white;
             align-self: flex-end;
@@ -169,7 +169,7 @@
             border: none;
         }
 
-        .n8n-chat-widget .chat-message.bot {
+        .pulsifyai-chat-widget .chat-message.bot {
             background: var(--chat--color-background);
             border: 1px solid rgba(133, 79, 255, 0.2);
             color: var(--chat--color-font);
@@ -177,7 +177,7 @@
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
-        .n8n-chat-widget .chat-input {
+        .pulsifyai-chat-widget .chat-input {
             padding: 16px;
             background: var(--chat--color-background);
             border-top: 1px solid rgba(133, 79, 255, 0.1);
@@ -185,7 +185,7 @@
             gap: 8px;
         }
 
-        .n8n-chat-widget .chat-input textarea {
+        .pulsifyai-chat-widget .chat-input textarea {
             flex: 1;
             padding: 12px;
             border: 1px solid rgba(133, 79, 255, 0.2);
@@ -197,12 +197,12 @@
             font-size: 14px;
         }
 
-        .n8n-chat-widget .chat-input textarea::placeholder {
+        .pulsifyai-chat-widget .chat-input textarea::placeholder {
             color: var(--chat--color-font);
             opacity: 0.6;
         }
 
-        .n8n-chat-widget .chat-input button {
+        .pulsifyai-chat-widget .chat-input button {
             background: linear-gradient(135deg, var(--chat--color-primary) 0%, var(--chat--color-secondary) 100%);
             color: white;
             border: none;
@@ -214,44 +214,45 @@
             font-weight: 500;
         }
 
-        .n8n-chat-widget .chat-input button:hover {
+        .pulsifyai-chat-widget .chat-input button:hover {
             transform: scale(1.05);
         }
 
-        .n8n-chat-widget .mic-button {
+        .pulsifyai-chat-widget .mic-button {
             background: linear-gradient(135deg, var(--chat--color-primary) 0%, var(--chat--color-secondary) 100%);
             color: white;
             border: none;
             border-radius: 8px;
             width: 46px;
+            cursor: pointer;
+            transition: transform 0.2s;
             display: flex;
             align-items: center;
             justify-content: center;
-            cursor: pointer;
-            transition: transform 0.2s;
         }
 
-        .n8n-chat-widget .mic-button:hover {
+        .pulsifyai-chat-widget .mic-button:hover {
             transform: scale(1.05);
         }
 
-        .n8n-chat-widget .mic-button.recording {
+        .pulsifyai-chat-widget .mic-button.recording {
+            background: #ff4444;
             animation: pulse 1.5s infinite;
         }
 
         @keyframes pulse {
             0% {
-                box-shadow: 0 0 0 0 rgba(133, 79, 255, 0.5);
+                box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7);
             }
             70% {
-                box-shadow: 0 0 0 10px rgba(133, 79, 255, 0);
+                box-shadow: 0 0 0 10px rgba(255, 68, 68, 0);
             }
             100% {
-                box-shadow: 0 0 0 0 rgba(133, 79, 255, 0);
+                box-shadow: 0 0 0 0 rgba(255, 68, 68, 0);
             }
         }
 
-        .n8n-chat-widget .chat-toggle {
+        .pulsifyai-chat-widget .chat-toggle {
             position: fixed;
             bottom: 20px;
             right: 20px;
@@ -270,29 +271,29 @@
             justify-content: center;
         }
 
-        .n8n-chat-widget .chat-toggle.position-left {
+        .pulsifyai-chat-widget .chat-toggle.position-left {
             right: auto;
             left: 20px;
         }
 
-        .n8n-chat-widget .chat-toggle:hover {
+        .pulsifyai-chat-widget .chat-toggle:hover {
             transform: scale(1.05);
         }
 
-        .n8n-chat-widget .chat-toggle svg {
+        .pulsifyai-chat-widget .chat-toggle svg {
             width: 24px;
             height: 24px;
             fill: currentColor;
         }
 
-        .n8n-chat-widget .chat-footer {
+        .pulsifyai-chat-widget .chat-footer {
             padding: 8px;
             text-align: center;
             background: var(--chat--color-background);
             border-top: 1px solid rgba(133, 79, 255, 0.1);
         }
 
-        .n8n-chat-widget .chat-footer a {
+        .pulsifyai-chat-widget .chat-footer a {
             color: var(--chat--color-primary);
             text-decoration: none;
             font-size: 12px;
@@ -301,7 +302,7 @@
             font-family: inherit;
         }
 
-        .n8n-chat-widget .chat-footer a:hover {
+        .pulsifyai-chat-widget .chat-footer a:hover {
             opacity: 1;
         }
     `;
@@ -351,23 +352,23 @@
         } : defaultConfig;
 
     // Prevent multiple initializations
-    if (window.N8NChatWidgetInitialized) return;
-    window.N8NChatWidgetInitialized = true;
+    if (window.PulsifyAIChatWidgetInitialized) return;
+    window.PulsifyAIChatWidgetInitialized = true;
 
     let currentSessionId = '';
-    let mediaRecorder = null;
+    let mediaRecorder;
     let audioChunks = [];
     let isRecording = false;
 
     // Create widget container
     const widgetContainer = document.createElement('div');
-    widgetContainer.className = 'n8n-chat-widget';
+    widgetContainer.className = 'pulsifyai-chat-widget';
     
     // Set CSS variables for colors
-    widgetContainer.style.setProperty('--n8n-chat-primary-color', config.style.primaryColor);
-    widgetContainer.style.setProperty('--n8n-chat-secondary-color', config.style.secondaryColor);
-    widgetContainer.style.setProperty('--n8n-chat-background-color', config.style.backgroundColor);
-    widgetContainer.style.setProperty('--n8n-chat-font-color', config.style.fontColor);
+    widgetContainer.style.setProperty('--pulsifyai-chat-primary-color', config.style.primaryColor);
+    widgetContainer.style.setProperty('--pulsifyai-chat-secondary-color', config.style.secondaryColor);
+    widgetContainer.style.setProperty('--pulsifyai-chat-background-color', config.style.backgroundColor);
+    widgetContainer.style.setProperty('--pulsifyai-chat-font-color', config.style.fontColor);
 
     const chatContainer = document.createElement('div');
     chatContainer.className = `chat-container${config.style.position === 'left' ? ' position-left' : ''}`;
@@ -401,7 +402,7 @@
             <div class="chat-input">
                 <textarea placeholder="Type your message here..." rows="1"></textarea>
                 <button class="mic-button" type="button">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
                         <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
                         <line x1="12" y1="19" x2="12" y2="23"></line>
@@ -514,99 +515,82 @@
     }
 
     async function sendAudioMessage(audioBlob) {
-        // Create a message indicating audio is being processed
+        // Create a FormData object to send the audio file
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'recording.mp3');
+        formData.append('sessionId', currentSessionId);
+        formData.append('route', config.webhook.route);
+        formData.append('action', 'sendAudio');
+        formData.append('metadata', JSON.stringify({ userId: "" }));
+
         const userMessageDiv = document.createElement('div');
         userMessageDiv.className = 'chat-message user';
-        userMessageDiv.textContent = "[Audio Message]";
+        userMessageDiv.textContent = "🎤 Audio message sent";
         messagesContainer.appendChild(userMessageDiv);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-        // Convert the audio blob to base64
-        const reader = new FileReader();
-        reader.readAsDataURL(audioBlob);
-        
-        reader.onloadend = async function() {
-            const base64Audio = reader.result.split(',')[1];
+        try {
+            const response = await fetch(config.webhook.url, {
+                method: 'POST',
+                body: formData
+            });
             
-            // Send audio data to server
-            const messageData = {
-                action: "sendMessage",
-                sessionId: currentSessionId,
-                route: config.webhook.route,
-                chatInput: "",
-                metadata: {
-                    userId: "",
-                    audioData: base64Audio
-                }
-            };
-
-            try {
-                const response = await fetch(config.webhook.url, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(messageData)
-                });
-                
-                const data = await response.json();
-                
-                const botMessageDiv = document.createElement('div');
-                botMessageDiv.className = 'chat-message bot';
-                botMessageDiv.textContent = Array.isArray(data) ? data[0].output : data.output;
-                messagesContainer.appendChild(botMessageDiv);
-                messagesContainer.scrollTop = messagesContainer.scrollHeight;
-            } catch (error) {
-                console.error('Error sending audio:', error);
-            }
-        };
+            const data = await response.json();
+            
+            const botMessageDiv = document.createElement('div');
+            botMessageDiv.className = 'chat-message bot';
+            botMessageDiv.textContent = Array.isArray(data) ? data[0].output : data.output;
+            messagesContainer.appendChild(botMessageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        } catch (error) {
+            console.error('Error sending audio:', error);
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'chat-message bot';
+            errorDiv.textContent = "Sorry, I couldn't process your audio message. Please try again or send a text message instead.";
+            messagesContainer.appendChild(errorDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
     }
 
     function startRecording() {
+        if (isRecording) return;
+        
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
                 mediaRecorder = new MediaRecorder(stream);
                 audioChunks = [];
                 
-                mediaRecorder.ondataavailable = e => {
-                    audioChunks.push(e.data);
-                };
+                mediaRecorder.addEventListener("dataavailable", event => {
+                    audioChunks.push(event.data);
+                });
                 
-                mediaRecorder.onstop = () => {
-                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                mediaRecorder.addEventListener("stop", () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
                     sendAudioMessage(audioBlob);
                     
-                    // Stop all tracks
+                    // Stop all tracks to release the microphone
                     stream.getTracks().forEach(track => track.stop());
-                };
+                    
+                    micButton.classList.remove('recording');
+                    isRecording = false;
+                });
                 
-                // Start recording
                 mediaRecorder.start();
-                isRecording = true;
                 micButton.classList.add('recording');
+                isRecording = true;
             })
             .catch(error => {
-                console.error('Error accessing microphone:', error);
-                alert('Unable to access your microphone. Please check your browser permissions.');
+                console.error("Error accessing microphone:", error);
+                alert("Could not access your microphone. Please check your permissions and try again.");
             });
     }
-
+    
     function stopRecording() {
         if (mediaRecorder && isRecording) {
             mediaRecorder.stop();
-            isRecording = false;
-            micButton.classList.remove('recording');
         }
     }
 
-    // Audio recording handlers
-    micButton.addEventListener('mousedown', startRecording);
-    micButton.addEventListener('touchstart', startRecording);
-    
-    micButton.addEventListener('mouseup', stopRecording);
-    micButton.addEventListener('touchend', stopRecording);
-    micButton.addEventListener('mouseleave', stopRecording);
-    
     newChatBtn.addEventListener('click', startNewConversation);
     
     sendButton.addEventListener('click', () => {
@@ -628,6 +612,14 @@
         }
     });
     
+    micButton.addEventListener('click', () => {
+        if (!isRecording) {
+            startRecording();
+        } else {
+            stopRecording();
+        }
+    });
+    
     toggleButton.addEventListener('click', () => {
         chatContainer.classList.toggle('open');
     });
@@ -637,6 +629,10 @@
     closeButtons.forEach(button => {
         button.addEventListener('click', () => {
             chatContainer.classList.remove('open');
+            // If recording is in progress, stop it when closing the chat
+            if (isRecording) {
+                stopRecording();
+            }
         });
     });
 })();
