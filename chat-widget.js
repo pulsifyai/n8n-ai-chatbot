@@ -218,44 +218,37 @@
             transform: scale(1.05);
         }
 
-        /* Estilos para o botão de áudio */
-        .n8n-chat-widget .audio-button {
-            background: none;
+        .n8n-chat-widget .mic-button {
+            background: linear-gradient(135deg, var(--chat--color-primary) 0%, var(--chat--color-secondary) 100%);
+            color: white;
             border: none;
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
+            border-radius: 8px;
+            width: 46px;
             display: flex;
             align-items: center;
             justify-content: center;
             cursor: pointer;
-            transition: background-color 0.2s;
-            padding: 0;
+            transition: transform 0.2s;
         }
 
-        .n8n-chat-widget .audio-button:hover {
-            background-color: rgba(133, 79, 255, 0.1);
+        .n8n-chat-widget .mic-button:hover {
+            transform: scale(1.05);
         }
 
-        .n8n-chat-widget .audio-button svg {
-            width: 20px;
-            height: 20px;
-            fill: var(--chat--color-primary);
+        .n8n-chat-widget .mic-button.recording {
+            animation: pulse 1.5s infinite;
         }
 
-        .n8n-chat-widget .audio-button.recording svg {
-            fill: #f44336;
-        }
-
-        .n8n-chat-widget .audio-message {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .n8n-chat-widget .audio-player {
-            max-width: 100%;
-            height: 30px;
+        @keyframes pulse {
+            0% {
+                box-shadow: 0 0 0 0 rgba(133, 79, 255, 0.5);
+            }
+            70% {
+                box-shadow: 0 0 0 10px rgba(133, 79, 255, 0);
+            }
+            100% {
+                box-shadow: 0 0 0 0 rgba(133, 79, 255, 0);
+            }
         }
 
         .n8n-chat-widget .chat-toggle {
@@ -362,7 +355,7 @@
     window.N8NChatWidgetInitialized = true;
 
     let currentSessionId = '';
-    let mediaRecorder;
+    let mediaRecorder = null;
     let audioChunks = [];
     let isRecording = false;
 
@@ -406,13 +399,15 @@
             </div>
             <div class="chat-messages"></div>
             <div class="chat-input">
-                <button class="audio-button" title="Gravar mensagem de áudio">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                <textarea placeholder="Type your message here..." rows="1"></textarea>
+                <button class="mic-button" type="button">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+                        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                        <line x1="12" y1="19" x2="12" y2="23"></line>
+                        <line x1="8" y1="23" x2="16" y2="23"></line>
                     </svg>
                 </button>
-                <textarea placeholder="Type your message here..." rows="1"></textarea>
                 <button type="submit">Send</button>
             </div>
             <div class="chat-footer">
@@ -439,7 +434,7 @@
     const messagesContainer = chatContainer.querySelector('.chat-messages');
     const textarea = chatContainer.querySelector('textarea');
     const sendButton = chatContainer.querySelector('button[type="submit"]');
-    const audioButton = chatContainer.querySelector('.audio-button');
+    const micButton = chatContainer.querySelector('.mic-button');
 
     function generateUUID() {
         return crypto.randomUUID();
@@ -519,108 +514,99 @@
     }
 
     async function sendAudioMessage(audioBlob) {
-        // Criar um objeto FormData para enviar o arquivo
-        const formData = new FormData();
-        formData.append('audio', audioBlob, 'recording.wav');
-        formData.append('sessionId', currentSessionId);
-        formData.append('route', config.webhook.route);
-        formData.append('action', 'sendAudio');
-        formData.append('metadata', JSON.stringify({ userId: "" }));
-
-        // Criar elemento de mensagem de áudio do usuário
+        // Create a message indicating audio is being processed
         const userMessageDiv = document.createElement('div');
-        userMessageDiv.className = 'chat-message user audio-message';
-        
-        // Criar elemento de áudio para reprodução
-        const audioElement = document.createElement('audio');
-        audioElement.className = 'audio-player';
-        audioElement.controls = true;
-        audioElement.src = URL.createObjectURL(audioBlob);
-        
-        userMessageDiv.appendChild(audioElement);
+        userMessageDiv.className = 'chat-message user';
+        userMessageDiv.textContent = "[Audio Message]";
         messagesContainer.appendChild(userMessageDiv);
         messagesContainer.scrollTop = messagesContainer.scrollHeight;
 
-        try {
-            const response = await fetch(config.webhook.url, {
-                method: 'POST',
-                body: formData
-            });
+        // Convert the audio blob to base64
+        const reader = new FileReader();
+        reader.readAsDataURL(audioBlob);
+        
+        reader.onloadend = async function() {
+            const base64Audio = reader.result.split(',')[1];
             
-            const data = await response.json();
-            
-            const botMessageDiv = document.createElement('div');
-            botMessageDiv.className = 'chat-message bot';
-            botMessageDiv.textContent = Array.isArray(data) ? data[0].output : data.output;
-            messagesContainer.appendChild(botMessageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        } catch (error) {
-            console.error('Error sending audio:', error);
-            
-            // Mostrar mensagem de erro
-            const errorMessageDiv = document.createElement('div');
-            errorMessageDiv.className = 'chat-message bot';
-            errorMessageDiv.textContent = 'Não foi possível processar sua mensagem de áudio. Por favor, tente novamente ou envie uma mensagem de texto.';
-            messagesContainer.appendChild(errorMessageDiv);
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
-        }
+            // Send audio data to server
+            const messageData = {
+                action: "sendMessage",
+                sessionId: currentSessionId,
+                route: config.webhook.route,
+                chatInput: "",
+                metadata: {
+                    userId: "",
+                    audioData: base64Audio
+                }
+            };
+
+            try {
+                const response = await fetch(config.webhook.url, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(messageData)
+                });
+                
+                const data = await response.json();
+                
+                const botMessageDiv = document.createElement('div');
+                botMessageDiv.className = 'chat-message bot';
+                botMessageDiv.textContent = Array.isArray(data) ? data[0].output : data.output;
+                messagesContainer.appendChild(botMessageDiv);
+                messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            } catch (error) {
+                console.error('Error sending audio:', error);
+            }
+        };
     }
 
-    // Função para iniciar a gravação de áudio
     function startRecording() {
-        if (isRecording) return;
-        
-        // Solicitar permissão para acessar o microfone
         navigator.mediaDevices.getUserMedia({ audio: true })
             .then(stream => {
                 mediaRecorder = new MediaRecorder(stream);
                 audioChunks = [];
                 
-                // Adicionar dados à medida que são gravados
-                mediaRecorder.addEventListener('dataavailable', event => {
-                    audioChunks.push(event.data);
-                });
+                mediaRecorder.ondataavailable = e => {
+                    audioChunks.push(e.data);
+                };
                 
-                // Quando a gravação parar, criar o blob de áudio
-                mediaRecorder.addEventListener('stop', () => {
+                mediaRecorder.onstop = () => {
                     const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
                     sendAudioMessage(audioBlob);
                     
-                    // Liberar recursos do stream
+                    // Stop all tracks
                     stream.getTracks().forEach(track => track.stop());
-                    
-                    // Resetar estado da gravação
-                    isRecording = false;
-                    audioButton.classList.remove('recording');
-                });
+                };
                 
-                // Iniciar gravação
+                // Start recording
                 mediaRecorder.start();
                 isRecording = true;
-                audioButton.classList.add('recording');
+                micButton.classList.add('recording');
             })
             .catch(error => {
                 console.error('Error accessing microphone:', error);
-                alert('Não foi possível acessar o microfone. Verifique as permissões do navegador.');
+                alert('Unable to access your microphone. Please check your browser permissions.');
             });
     }
-    
-    // Função para parar a gravação de áudio
+
     function stopRecording() {
-        if (!isRecording) return;
-        
-        mediaRecorder.stop();
+        if (mediaRecorder && isRecording) {
+            mediaRecorder.stop();
+            isRecording = false;
+            micButton.classList.remove('recording');
+        }
     }
 
-    // Adicionar handler para botão de áudio
-    audioButton.addEventListener('click', () => {
-        if (isRecording) {
-            stopRecording();
-        } else {
-            startRecording();
-        }
-    });
-
+    // Audio recording handlers
+    micButton.addEventListener('mousedown', startRecording);
+    micButton.addEventListener('touchstart', startRecording);
+    
+    micButton.addEventListener('mouseup', stopRecording);
+    micButton.addEventListener('touchend', stopRecording);
+    micButton.addEventListener('mouseleave', stopRecording);
+    
     newChatBtn.addEventListener('click', startNewConversation);
     
     sendButton.addEventListener('click', () => {
@@ -651,11 +637,6 @@
     closeButtons.forEach(button => {
         button.addEventListener('click', () => {
             chatContainer.classList.remove('open');
-            
-            // Parar gravação se estiver em andamento
-            if (isRecording) {
-                stopRecording();
-            }
         });
     });
 })();
