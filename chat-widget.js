@@ -1,155 +1,118 @@
-[
-  {
-    "name": "Chat Trigger",
-    "type": "n8n-nodes-base.webhook",
-    "position": [100, 300],
-    "parameters": {
-      "path": "chat",
-      "responseMode": "lastNode",
-      "options": {
-        "rawBody": true,
-        "bodyParameterName": "payload"
-      }
-    }
-  },
-  {
-    "name": "Determinar Tipo de Mensagem",
-    "type": "n8n-nodes-base.switch",
-    "position": [300, 300],
-    "parameters": {
-      "conditions": [
-        {
-          "name": "É Áudio",
-          "conditions": [
-            {
-              "value1": "={{ $request.headers['content-type'] }}",
-              "operation": "regex",
-              "value2": "multipart/form-data"
-            }
-          ]
-        },
-        {
-          "name": "É Texto",
-          "conditions": [
-            {
-              "value1": "={{ $request.headers['content-type'] }}",
-              "operation": "regex",
-              "value2": "application/json"
-            }
-          ]
+// Na função startRecording (linha 560), modifique para especificar o formato correto:
+
+function startRecording() {
+    if (isRecording) return;
+    
+    navigator.mediaDevices.getUserMedia({ audio: true })
+        .then(stream => {
+            // Configure o MediaRecorder com opções para MP3
+            const options = { mimeType: 'audio/webm' }; // Usamos webm porque MP3 não é suportado diretamente
+            mediaRecorder = new MediaRecorder(stream, options);
+            audioChunks = [];
+            
+            mediaRecorder.addEventListener("dataavailable", event => {
+                audioChunks.push(event.data);
+            });
+            
+            mediaRecorder.addEventListener("stop", async () => {
+                // Cria um blob com os chunks de áudio
+                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                
+                // Converte para MP3 se necessário (requer biblioteca adicional)
+                // Nota: Para MP3 real, você precisaria de uma biblioteca como lamejs
+                // Por enquanto enviamos como webm que é mais compatível com navegadores
+                
+                sendAudioMessage(audioBlob);
+                
+                // Stop all tracks to release the microphone
+                stream.getTracks().forEach(track => track.stop());
+                
+                micButton.classList.remove('recording');
+                isRecording = false;
+            });
+            
+            // Define intervalo para coletar dados a cada 500ms
+            mediaRecorder.start(500);
+            micButton.classList.add('recording');
+            isRecording = true;
+        })
+        .catch(error => {
+            console.error("Error accessing microphone:", error);
+            alert("Could not access your microphone. Please check your permissions and try again.");
+        });
+}
+
+// Modifique a função sendAudioMessage (linha 511) para enviar corretamente para o webhook:
+
+async function sendAudioMessage(audioBlob) {
+    // Criar URL para preview do áudio (opcional)
+    const audioUrl = URL.createObjectURL(audioBlob);
+    
+    // Criar um elemento de áudio para mostrar que o áudio foi gravado (opcional)
+    const audioElement = document.createElement('audio');
+    audioElement.src = audioUrl;
+    audioElement.controls = true;
+    
+    const userMessageDiv = document.createElement('div');
+    userMessageDiv.className = 'chat-message user';
+    userMessageDiv.innerHTML = "🎤 <span>Mensagem de áudio enviada</span>";
+    userMessageDiv.appendChild(audioElement);
+    messagesContainer.appendChild(userMessageDiv);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    // Criar FormData para enviar o arquivo
+    const formData = new FormData();
+    formData.append('audio', audioBlob, 'recording.webm'); // Nome do arquivo com extensão correta
+    
+    // Adicionar os mesmos dados que seriam enviados em uma mensagem de texto
+    const messageData = {
+        action: "sendMessage",
+        sessionId: currentSessionId,
+        route: config.webhook.route,
+        metadata: {
+            userId: "",
+            isAudio: true // Indicador de que é uma mensagem de áudio
         }
-      ]
+    };
+    
+    // Adicionar os dados como um campo JSON
+    formData.append('messageData', JSON.stringify(messageData));
+    
+    try {
+        // Mostrar indicador de carregamento
+        const loadingDiv = document.createElement('div');
+        loadingDiv.className = 'chat-message bot';
+        loadingDiv.textContent = "Processando sua mensagem de áudio...";
+        messagesContainer.appendChild(loadingDiv);
+        
+        const response = await fetch(config.webhook.url, {
+            method: 'POST',
+            body: formData
+        });
+        
+        // Remover mensagem de carregamento
+        messagesContainer.removeChild(loadingDiv);
+        
+        if (!response.ok) {
+            throw new Error(`Error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
+        const botMessageDiv = document.createElement('div');
+        botMessageDiv.className = 'chat-message bot';
+        botMessageDiv.textContent = Array.isArray(data) ? data[0].output : data.output;
+        messagesContainer.appendChild(botMessageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    } catch (error) {
+        console.error('Error sending audio:', error);
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'chat-message bot';
+        errorDiv.textContent = "Desculpe, não consegui processar sua mensagem de áudio. Por favor, tente novamente ou envie uma mensagem de texto.";
+        messagesContainer.appendChild(errorDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    } finally {
+        // Liberar URL criada
+        URL.revokeObjectURL(audioUrl);
     }
-  },
-  {
-    "name": "Processar Áudio",
-    "type": "n8n-nodes-base.httpRequest",
-    "position": [500, 200],
-    "parameters": {
-      "url": "https://api.openai.com/v1/audio/transcriptions",
-      "method": "POST",
-      "authentication": "headerAuth",
-      "headerParameters": {
-        "parameters": [
-          {
-            "name": "Authorization",
-            "value": "Bearer {{$node[\"Credenciais\"].json[\"openai_key\"]}}"
-          }
-        ]
-      },
-      "options": {
-        "formData": true
-      },
-      "formDataBinaryProperty": "audio",
-      "additionalFields": {
-        "model": "whisper-1",
-        "language": "pt",
-        "response_format": "json"
-      }
-    }
-  },
-  {
-    "name": "Extrair Transcrição",
-    "type": "n8n-nodes-base.set",
-    "position": [700, 200],
-    "parameters": {
-      "fields": {
-        "values": [
-          {
-            "name": "transcription",
-            "value": "={{ $json.text }}"
-          },
-          {
-            "name": "sessionId",
-            "value": "={{ $json.messageData.sessionId }}"
-          },
-          {
-            "name": "route",
-            "value": "={{ $json.messageData.route }}"
-          }
-        ]
-      }
-    }
-  },
-  {
-    "name": "Processar Texto",
-    "type": "n8n-nodes-base.set",
-    "position": [500, 400],
-    "parameters": {
-      "fields": {
-        "values": [
-          {
-            "name": "chatInput",
-            "value": "={{ $json.chatInput }}"
-          },
-          {
-            "name": "sessionId",
-            "value": "={{ $json.sessionId }}"
-          },
-          {
-            "name": "route",
-            "value": "={{ $json.route }}"
-          }
-        ]
-      }
-    }
-  },
-  {
-    "name": "Enviar para ChatGPT",
-    "type": "n8n-nodes-base.openAi",
-    "position": [900, 300],
-    "parameters": {
-      "authentication": "apiKey",
-      "operation": "completion",
-      "model": "gpt-4",
-      "options": {
-        "temperature": 0.7,
-        "maxTokens": 500
-      },
-      "prompt": "={{ $node[\"Formar Prompt\"].json[\"prompt\"] }}"
-    }
-  },
-  {
-    "name": "Formar Prompt",
-    "type": "n8n-nodes-base.function",
-    "position": [700, 300],
-    "parameters": {
-      "functionCode": "// Determinar se o input vem de texto ou transcrição de áudio\nconst userInput = $input.transcription ? $input.transcription : $input.chatInput;\n\n// Construir o prompt para o ChatGPT\nconst prompt = `Usuário: ${userInput}\\n\\nResponda de forma concisa e útil.`;\n\n// Retornar o prompt formatado\nreturn { prompt };"
-    }
-  },
-  {
-    "name": "Formatar Resposta",
-    "type": "n8n-nodes-base.set",
-    "position": [1100, 300],
-    "parameters": {
-      "fields": {
-        "values": [
-          {
-            "name": "output",
-            "value": "={{ $json.text }}"
-          }
-        ]
-      }
-    }
-  }
-]
+}
