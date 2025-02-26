@@ -218,6 +218,46 @@
             transform: scale(1.05);
         }
 
+        /* Estilos para o botão de áudio */
+        .n8n-chat-widget .audio-button {
+            background: none;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            padding: 0;
+        }
+
+        .n8n-chat-widget .audio-button:hover {
+            background-color: rgba(133, 79, 255, 0.1);
+        }
+
+        .n8n-chat-widget .audio-button svg {
+            width: 20px;
+            height: 20px;
+            fill: var(--chat--color-primary);
+        }
+
+        .n8n-chat-widget .audio-button.recording svg {
+            fill: #f44336;
+        }
+
+        .n8n-chat-widget .audio-message {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .n8n-chat-widget .audio-player {
+            max-width: 100%;
+            height: 30px;
+        }
+
         .n8n-chat-widget .chat-toggle {
             position: fixed;
             bottom: 20px;
@@ -322,6 +362,9 @@
     window.N8NChatWidgetInitialized = true;
 
     let currentSessionId = '';
+    let mediaRecorder;
+    let audioChunks = [];
+    let isRecording = false;
 
     // Create widget container
     const widgetContainer = document.createElement('div');
@@ -363,6 +406,12 @@
             </div>
             <div class="chat-messages"></div>
             <div class="chat-input">
+                <button class="audio-button" title="Gravar mensagem de áudio">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+                        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+                    </svg>
+                </button>
                 <textarea placeholder="Type your message here..." rows="1"></textarea>
                 <button type="submit">Send</button>
             </div>
@@ -390,6 +439,7 @@
     const messagesContainer = chatContainer.querySelector('.chat-messages');
     const textarea = chatContainer.querySelector('textarea');
     const sendButton = chatContainer.querySelector('button[type="submit"]');
+    const audioButton = chatContainer.querySelector('.audio-button');
 
     function generateUUID() {
         return crypto.randomUUID();
@@ -468,6 +518,109 @@
         }
     }
 
+    async function sendAudioMessage(audioBlob) {
+        // Criar um objeto FormData para enviar o arquivo
+        const formData = new FormData();
+        formData.append('audio', audioBlob, 'recording.wav');
+        formData.append('sessionId', currentSessionId);
+        formData.append('route', config.webhook.route);
+        formData.append('action', 'sendAudio');
+        formData.append('metadata', JSON.stringify({ userId: "" }));
+
+        // Criar elemento de mensagem de áudio do usuário
+        const userMessageDiv = document.createElement('div');
+        userMessageDiv.className = 'chat-message user audio-message';
+        
+        // Criar elemento de áudio para reprodução
+        const audioElement = document.createElement('audio');
+        audioElement.className = 'audio-player';
+        audioElement.controls = true;
+        audioElement.src = URL.createObjectURL(audioBlob);
+        
+        userMessageDiv.appendChild(audioElement);
+        messagesContainer.appendChild(userMessageDiv);
+        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+
+        try {
+            const response = await fetch(config.webhook.url, {
+                method: 'POST',
+                body: formData
+            });
+            
+            const data = await response.json();
+            
+            const botMessageDiv = document.createElement('div');
+            botMessageDiv.className = 'chat-message bot';
+            botMessageDiv.textContent = Array.isArray(data) ? data[0].output : data.output;
+            messagesContainer.appendChild(botMessageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        } catch (error) {
+            console.error('Error sending audio:', error);
+            
+            // Mostrar mensagem de erro
+            const errorMessageDiv = document.createElement('div');
+            errorMessageDiv.className = 'chat-message bot';
+            errorMessageDiv.textContent = 'Não foi possível processar sua mensagem de áudio. Por favor, tente novamente ou envie uma mensagem de texto.';
+            messagesContainer.appendChild(errorMessageDiv);
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+    }
+
+    // Função para iniciar a gravação de áudio
+    function startRecording() {
+        if (isRecording) return;
+        
+        // Solicitar permissão para acessar o microfone
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                // Adicionar dados à medida que são gravados
+                mediaRecorder.addEventListener('dataavailable', event => {
+                    audioChunks.push(event.data);
+                });
+                
+                // Quando a gravação parar, criar o blob de áudio
+                mediaRecorder.addEventListener('stop', () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                    sendAudioMessage(audioBlob);
+                    
+                    // Liberar recursos do stream
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    // Resetar estado da gravação
+                    isRecording = false;
+                    audioButton.classList.remove('recording');
+                });
+                
+                // Iniciar gravação
+                mediaRecorder.start();
+                isRecording = true;
+                audioButton.classList.add('recording');
+            })
+            .catch(error => {
+                console.error('Error accessing microphone:', error);
+                alert('Não foi possível acessar o microfone. Verifique as permissões do navegador.');
+            });
+    }
+    
+    // Função para parar a gravação de áudio
+    function stopRecording() {
+        if (!isRecording) return;
+        
+        mediaRecorder.stop();
+    }
+
+    // Adicionar handler para botão de áudio
+    audioButton.addEventListener('click', () => {
+        if (isRecording) {
+            stopRecording();
+        } else {
+            startRecording();
+        }
+    });
+
     newChatBtn.addEventListener('click', startNewConversation);
     
     sendButton.addEventListener('click', () => {
@@ -498,6 +651,11 @@
     closeButtons.forEach(button => {
         button.addEventListener('click', () => {
             chatContainer.classList.remove('open');
+            
+            // Parar gravação se estiver em andamento
+            if (isRecording) {
+                stopRecording();
+            }
         });
     });
 })();
