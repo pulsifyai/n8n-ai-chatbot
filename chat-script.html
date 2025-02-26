@@ -1,24 +1,25 @@
-    <!-- Widget Configuration -->
-    <script>
-        window.ChatWidgetConfig = {
-            webhook: {
-                url: '<your n8n webhook URL>',
-                route: 'general'
-            },
-            branding: {
-                logo: '<your company logo URL>',
-                name: 'nocodecreative.io', // Your company name
-                welcomeText: 'Hi 👋, how can we help?', //Welcome message
-                responseTimeText: 'We typically respond right away' //Response time message
-            },
-            style: {
-                primaryColor: '#854fff', //Primary color
-                secondaryColor: '#6b3fd4', //Secondary color
-                position: 'right', //Position of the widget (left or right)
-                backgroundColor: '#854fff', //Background color of the chat widget
-                fontColor: '#854fff' //Text color for messages and interface
-            }
-        };
-    </script>
-    <script src="https://cdn.jsdelivr.net/gh/WayneSimpson/n8n-chatbot-template/chat-widget.js"></script>
-    <!-- Widget Script -->
+<!-- Widget Configuration -->
+<script>
+    window.ChatWidgetConfig = {
+        webhook: {
+            url: 'https://primary-production-5d07.up.railway.app/webhook/f406671e-c954-4691-b39a-66c90aa2f103/chat',
+            route: 'general'
+        },
+        branding: {
+            logo: 'https://prod-insight-rest-api.s3.amazonaws.com/white-label/74f06419-9b26-4d05-988a-85bf5c59361f/1/favicon.png',
+            name: 'PulsifyAI', // Your company name
+            welcomeText: 'Hi 👋, how can we help?', // Welcome message
+            responseTimeText: 'We typically respond right away' // Response time message
+        },
+        style: {
+            primaryColor: '#854fff', // Primary color
+            secondaryColor: '#6b3fd4', // Secondary color
+            position: 'right', // Position of the widget (left or right)
+            backgroundColor: '#ffffff', // Background color of the chat widget
+            fontColor: '#333333' // Text color for messages and interface
+        }
+    };
+</script>
+
+<script src="https://cdn.jsdelivr.net/gh/pulsifyai/n8n-ai-chatbot@efe4d3cc64351bbea78ce3fd8260076bab42f6a1/chat-widget.js"></script>
+<!-- Widget Script -->
