@@ -1,4 +1,4 @@
-/// Chat Widget Script
+// Chat Widget Script
 (function() {
     // Create and inject styles
     const styles = `
@@ -390,6 +390,7 @@
             <p class="response-text">${config.branding.responseTimeText}</p>
         </div>
     `;
+
     const chatInterfaceHTML = `
         <div class="chat-interface">
             <div class="brand-header">
@@ -485,6 +486,7 @@
                 userId: ""
             }
         };
+
         const userMessageDiv = document.createElement('div');
         userMessageDiv.className = 'chat-message user';
         userMessageDiv.textContent = message;
@@ -550,73 +552,38 @@
         }
     }
 
-function startRecording() {
-    if (isRecording) return;
-
-    navigator.permissions.query({ name: 'microphone' })
-        .then(function(result) {
-            if (result.state === 'granted') {
-                // Permissão já concedida, iniciar a gravação
-                initiateRecording();
-            } else if (result.state === 'prompt') {
-                // Permissão precisa ser solicitada
-                navigator.mediaDevices.getUserMedia({ audio: true })
-                    .then(stream => {
-                        // Permissão concedida, iniciar a gravação
-                        initiateRecording(stream);
-                    })
-                    .catch(error => {
-                        console.error("Error accessing microphone:", error);
-                        alert("Could not access your microphone. Please check your permissions and try again.");
-                    });
-            } else if (result.state === 'denied') {
-                // Permissão negada
-                alert("Microphone access has been denied. Please enable it in your browser settings.");
-            }
-        });
-
-    function initiateRecording(stream) {
-        if (!stream) {
-            navigator.mediaDevices.getUserMedia({ audio: true })
-                .then(stream => {
-                    startMediaRecorder(stream);
-                })
-                .catch(error => {
-                    console.error("Error accessing microphone:", error);
-                    alert("Could not access your microphone. Please check your permissions and try again.");
+    function startRecording() {
+        if (isRecording) return;
+        
+        navigator.mediaDevices.getUserMedia({ audio: true })
+            .then(stream => {
+                mediaRecorder = new MediaRecorder(stream);
+                audioChunks = [];
+                
+                mediaRecorder.addEventListener("dataavailable", event => {
+                    audioChunks.push(event.data);
                 });
-        } else {
-            startMediaRecorder(stream);
-        }
-    }
-
-    function startMediaRecorder(stream) {
-        mediaRecorder = new MediaRecorder(stream, {
-            mimeType: 'audio/mpeg'
-        });
-        audioChunks = [];
-
-        mediaRecorder.addEventListener("dataavailable", event => {
-            audioChunks.push(event.data);
-        });
-
-        mediaRecorder.addEventListener("stop", () => {
-            const audioBlob = new Blob(audioChunks, {
-                type: 'audio/mpeg'
+                
+                mediaRecorder.addEventListener("stop", () => {
+                    const audioBlob = new Blob(audioChunks, { type: 'audio/mp3' });
+                    sendAudioMessage(audioBlob);
+                    
+                    // Stop all tracks to release the microphone
+                    stream.getTracks().forEach(track => track.stop());
+                    
+                    micButton.classList.remove('recording');
+                    isRecording = false;
+                });
+                
+                mediaRecorder.start();
+                micButton.classList.add('recording');
+                isRecording = true;
+            })
+            .catch(error => {
+                console.error("Error accessing microphone:", error);
+                alert("Could not access your microphone. Please check your permissions and try again.");
             });
-            sendAudioMessage(audioBlob);
-
-            stream.getTracks().forEach(track => track.stop());
-
-            micButton.classList.remove('recording');
-            isRecording = false;
-        });
-
-        mediaRecorder.start();
-        micButton.classList.add('recording');
-        isRecording = true;
     }
-}
     
     function stopRecording() {
         if (mediaRecorder && isRecording) {
@@ -656,6 +623,7 @@ function startRecording() {
     toggleButton.addEventListener('click', () => {
         chatContainer.classList.toggle('open');
     });
+
     // Add close button handlers
     const closeButtons = chatContainer.querySelectorAll('.close-button');
     closeButtons.forEach(button => {
